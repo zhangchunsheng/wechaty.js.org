@@ -1,0 +1,1375 @@
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.2.0">Jekyll</generator><link href="https://wechaty.js.org/feed.xml" rel="self" type="application/atom+xml" /><link href="https://wechaty.js.org/" rel="alternate" type="text/html" /><updated>2020-12-29T15:10:51+00:00</updated><id>https://wechaty.js.org/feed.xml</id><title type="html">Wechaty</title><subtitle>Conversational SDK for Chatbot Makers</subtitle><entry><title type="html">Python-Wechaty之自动回复&amp;amp;关键字入群插件</title><link href="https://wechaty.js.org/2020/12/25/python-wechaty-room-inviter-plugin/" rel="alternate" type="text/html" title="Python-Wechaty之自动回复&amp;amp;关键字入群插件" /><published>2020-12-25T00:00:00+00:00</published><updated>2020-12-25T00:00:00+00:00</updated><id>https://wechaty.js.org/2020/12/25/python-wechaty-room-inviter-plugin</id><content type="html" xml:base="https://wechaty.js.org/2020/12/25/python-wechaty-room-inviter-plugin/">&lt;p&gt;经不可靠统计，大部分聊天机器人的初学者都是以：自动回复和关键字入群这两个基础功能上手，然后才会逐步开发更多更复杂的功能，在此我将介绍如何使用python-wechaty快速实现这两个功能。&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;python-wechaty：一个面向所有IM平台的聊天机器人框架。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h2 id=&quot;一背景介绍&quot;&gt;一、背景介绍&lt;/h2&gt;
+
+&lt;h3 id=&quot;11-自动回复&quot;&gt;1.1 自动回复&lt;/h3&gt;
+
+&lt;p&gt;有接触到微信公众号的同学都知道，它有一个自动回复的功能：你给它发送一个关键字，它就给你回复指定的内容，可以是纯文字，图片，视频等。&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;微信公众号的自动回复数量只有200个，虽然能够满足大部分的需求，可是如果扩充的话，便可以选择自定义开发。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;而在微信中回复的内容又可以是什么呢？可以是：纯文字、带艾特消息@的文字、图片、动图（表情包）、视频，语音、视频、小程序以及好友名片等，这些消息内容在python-wechaty都能够使用简单的配置即可完成此功能。&lt;/p&gt;
+
+&lt;h3 id=&quot;12-关键字入群&quot;&gt;1.2 关键字入群&lt;/h3&gt;
+
+&lt;p&gt;目前有很多社区运营者都会面临着一些问题：&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;群人数一多，就只能够一个一个拉人入群。&lt;/li&gt;
+  &lt;li&gt;有好几个用户/开发者群，某些群人数满了，无法动态拉到其他群。&lt;/li&gt;
+  &lt;li&gt;一个人管理的活动太多，每次都需要根据用户的意图将其拉到指定的群，大大增加运营同学的工作量。&lt;/li&gt;
+  &lt;li&gt;每天就光拉人入群就花了半天的时间，还有半天是在偷着休息，因为太累了。&lt;/li&gt;
+  &lt;li&gt;……&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;以上问题都是我根据身边部分同学和朋友的吐槽中总结而来，为了帮助他们快速完成KPI，提升业绩，我做了以下AutoReplyPlugin和RoomInviterPlugin两个插件。&lt;/p&gt;
+
+&lt;p&gt;接下来我将介绍如何上手这两个插件，快速解决你们身边的一些问题。&lt;/p&gt;
+
+&lt;h2 id=&quot;二安装--配置&quot;&gt;二、安装 &amp;amp; 配置&lt;/h2&gt;
+
+&lt;p&gt;编程环境要求python3.7+版本，以及一个token两个依赖包。&lt;/p&gt;
+
+&lt;h3 id=&quot;11-配置token&quot;&gt;1.1 配置Token&lt;/h3&gt;
+
+&lt;p&gt;什么是Token？为什么要配置Token？如何获取Token？&lt;/p&gt;
+
+&lt;p&gt;这么粗暴的灵魂三问在我们官网上早已有相关的&lt;a href=&quot;https://github.com/juzibot/Welcome/wiki/Everything-about-Wechaty&quot;&gt;文档&lt;/a&gt;，也欢迎各位去挖掘我们潜在的文档链接，说不定你就能找到属于你的One Piece，所以在此章节我就只介绍如何在python-wechaty中配置Token。&lt;/p&gt;
+
+&lt;p&gt;Token的配置可以有多种方式：&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;方法一：通过环境变量来配置&lt;/p&gt;
+
+    &lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;  &lt;span class=&quot;nb&quot;&gt;export &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;WECHATY_PUPPET_HOSTIE_TOKEN&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'your-token'&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;方法二：通过python代码来配置&lt;/p&gt;
+
+    &lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;  &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;os&lt;/span&gt;
+  &lt;span class=&quot;n&quot;&gt;os&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;environ&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'WECHATY_PUPPET_HOSTIE_TOKEN'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'your-token'&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;那如何获取长期Token呢？详细请看：&lt;a href=&quot;https://github.com/juzibot/Welcome/wiki/Everything-about-Wechaty&quot;&gt;Everything-about-Wechaty&lt;/a&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;12-安装依赖包&quot;&gt;1.2 安装依赖包&lt;/h3&gt;
+
+&lt;p&gt;整个依赖包分为两个：&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;wechaty&lt;/code&gt;以及&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;wechaty-plugin-contrib&lt;/code&gt;，安装脚本如下所示：&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;# 安装python-wechaty包&lt;/span&gt;
+pip &lt;span class=&quot;nb&quot;&gt;install &lt;/span&gt;wechaty
+&lt;span class=&quot;c&quot;&gt;# 安装插件库&lt;/span&gt;
+pip &lt;span class=&quot;nb&quot;&gt;install &lt;/span&gt;wechaty-plugin-contrib
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;前者为使用python-wechaty开发聊天机器人的基础依赖包，里面包含开发过程中的对象，甚至是自定义插件；后者为官方维护的插件库，在里面有很多常见的基础插件，让你快速解决日常学习工作中的自动化问题。同时也欢迎各位来提交PR，贡献属于自己的插件。&lt;/p&gt;
+
+&lt;p&gt;Wechaty社区欢迎各位优秀开发者共建Chatbot领域基础设施&lt;/p&gt;
+
+&lt;h2 id=&quot;三关键字入群&quot;&gt;三、关键字入群&lt;/h2&gt;
+
+&lt;p&gt;关键字入群是很多社区运营同学的日常工作，也是最消耗体力的活儿，并没有很很复杂的脑力活儿。现在都0202年了，居然有同学还没有使用到自动化工具来提升工作效率，更有趣的事儿，他们大部分都有一个程序猿同事/同学/老公/老婆。为了让他们更好的帮助自己身边的人解决问题，关键字入群这个插件你们必须得安利一波儿～&lt;/p&gt;
+
+&lt;h3 id=&quot;31-功能介绍&quot;&gt;3.1 功能介绍&lt;/h3&gt;
+
+&lt;p&gt;当用户私聊你，发送一个关键字，然后聊天机器人会根据关键字寻找到对应的群，比如你给Wechaty官方机器人发送一个“wechaty”的关键字，它会将你拉到Wechaty的开发者群内，并发送欢迎语。&lt;/p&gt;
+
+&lt;p&gt;功能实际上很简单，如果从零开发的话，会让你无从下说。可是如果你使用python-wechaty的话，只需要几行简单的配置代码即可开发此功能。&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;RoomInviterPlugin&lt;/code&gt;  Is All You Need.&lt;/p&gt;
+
+&lt;h3 id=&quot;32-示例代码&quot;&gt;3.2 示例代码&lt;/h3&gt;
+
+&lt;p&gt;最好的代码永远是最简单的代码&lt;/p&gt;
+
+&lt;p&gt;以下代码接近于人类语言，即使是新手，相信看完也知道如何开发专属聊天机器人：&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;asyncio&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;typing&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Dict&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;wechaty&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Wechaty&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;wechaty_plugin_contrib.contrib&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;RoomInviterOptions&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;RoomInviterPlugin&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;wechaty_plugin_contrib.matchers&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;MessageMatcher&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;RoomMatcher&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;async&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;run&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;():&lt;/span&gt;
+    &lt;span class=&quot;s&quot;&gt;&quot;&quot;&quot;async run method&quot;&quot;&quot;&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;rules&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Dict&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;MessageMatcher&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;RoomMatcher&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;MessageMatcher&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'wechaty'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;RoomMatcher&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'Wechaty开发者群（1）'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;MessageMatcher&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'python-wechaty'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;RoomMatcher&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'Python-Wechaty开发者群（2）'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;plugin&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;RoomInviterPlugin&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;options&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;RoomInviterOptions&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'python-wechaty关键字入群插件'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;rules&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;rules&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;welcome&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'欢迎入群 ～'&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;bot&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Wechaty&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;().&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;use&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;plugin&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;await&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;bot&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;start&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;asyncio&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;run&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;run&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;())&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;在以上代码中，主要是分为三步：导入对象，注入规则，启动机器人。&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;导入对象&lt;/strong&gt;&lt;/p&gt;
+
+    &lt;p&gt;在&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;wechaty-plugin-contrib&lt;/code&gt;的插件库中，所有的插件都会存在于&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;wechaty_plugin_contrib.contrib&lt;/code&gt;下。大家一方面可以从源代码中查看的到最新的插件列表，也可以从README中查看到对应的插件列表。&lt;/p&gt;
+
+    &lt;blockquote&gt;
+      &lt;p&gt;相信大家能够在这里找到灵感来源，或者一怒之下提交自己的定制插件。&lt;/p&gt;
+    &lt;/blockquote&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;注入&lt;strong&gt;规则&lt;/strong&gt;&lt;/p&gt;
+
+    &lt;p&gt;在上述代码中，&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rules&lt;/code&gt;是一个规则字典，表示匹配到指定消息后就将消息发送者邀请到指定的群内；&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;plugin&lt;/code&gt;就是封装核心逻辑组件，处理所有的自动化操作逻辑，开发者不需要关心这部分。&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;启动机器人&lt;/p&gt;
+
+    &lt;p&gt;启动机器人只需要调用一下start这个函数。&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;三自动回复&quot;&gt;三、自动回复&lt;/h2&gt;
+
+&lt;p&gt;自动回复也是我们日常生活工作中的一些高频使用场景，而回复内容不仅限于文字，还可以是图片，文件，链接以及小程序等等。比如你给机器人发“网易”，它会给你发送一个网易云音乐的小程序；你给它发一个”身份证“，它会给你发送身份证的正反面照片；…… 等等。&lt;/p&gt;
+
+&lt;p&gt;以上应用场景很常见，而且还有更多的实际应用案例可根据自己的需求来调整。&lt;/p&gt;
+
+&lt;p&gt;示例代码如下所示：&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;asyncio&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;wechaty&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Wechaty&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;MiniProgram&lt;/span&gt;  &lt;span class=&quot;c1&quot;&gt;# type: ignore
+&lt;/span&gt;&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;wechaty_puppet&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;    &lt;span class=&quot;c1&quot;&gt;# type: ignore
+&lt;/span&gt;    &lt;span class=&quot;n&quot;&gt;FileBox&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;wechaty_plugin_contrib&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;AutoReplyRule&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;AutoReplyPlugin&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;AutoReplyOptions&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;wechaty_plugin_contrib.matchers&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ContactMatcher&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;async&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;run&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;():&lt;/span&gt;
+    &lt;span class=&quot;s&quot;&gt;&quot;&quot;&quot;async run method&quot;&quot;&quot;&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;img_url&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'https://ss0.bdstatic.com/70cFuHSh_Q1YnxGkpoWK1HF6hhy'&lt;/span&gt; \
+              &lt;span class=&quot;s&quot;&gt;'/it/u=1257042014,3164688936&amp;amp;fm=26&amp;amp;gp=0.jpg'&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;plugin&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;AutoReplyPlugin&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;options&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;AutoReplyOptions&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;rules&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;AutoReplyRule&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;keyword&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'ding'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;reply_content&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'dong'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;AutoReplyRule&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;keyword&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'七龙珠'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;reply_content&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'七龙珠'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;AutoReplyRule&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+                &lt;span class=&quot;n&quot;&gt;keyword&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'七龙珠'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                &lt;span class=&quot;n&quot;&gt;reply_content&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;FileBox&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;from_url&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;img_url&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'python.png'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+            &lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;AutoReplyRule&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+                &lt;span class=&quot;n&quot;&gt;keyword&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'网易-李白'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                &lt;span class=&quot;n&quot;&gt;reply_content&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;MiniProgram&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;create_from_json&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;({...})&lt;/span&gt;
+            &lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;],&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;matchers&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;ContactMatcher&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'秋客'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;bot&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Wechaty&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;().&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;use&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;plugin&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;await&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;bot&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;start&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;asyncio&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;run&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;run&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;())&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;代码非常简单（API设计的很人性化），相信大家一眼就能够看懂，在此我就不做过多解释。&lt;/p&gt;
+
+&lt;h2 id=&quot;四总结&quot;&gt;四、总结&lt;/h2&gt;
+
+&lt;p&gt;python-wechaty有非常人性化的API，同时内置了很多高频功能插件库，提供给开发者能够快速上手开发出自己的小应用。&lt;/p&gt;
+
+&lt;p&gt;整个wechaty的目标是面向所有IM平台，打造一款通用聊天机器人框架，也欢迎各位关注并使用&lt;a href=&quot;https://github.com/wechaty/python-wechaty&quot;&gt;python-wechaty&lt;/a&gt;框架。&lt;/p&gt;</content><author><name>wj-mcat</name></author><category term="tutorial" /><category term="news" /><category term="wechaty" /><category term="python-wechaty" /><summary type="html">经不可靠统计，大部分聊天机器人的初学者都是以：自动回复和关键字入群这两个基础功能上手，然后才会逐步开发更多更复杂的功能，在此我将介绍如何使用python-wechaty快速实现这两个功能。</summary><media:thumbnail xmlns:media="http://search.yahoo.com/mrss/" url="https://wechaty.js.org/assets/2020/python-wechaty/pythotn-wechaty-logo.png" /><media:content medium="image" url="https://wechaty.js.org/assets/2020/python-wechaty/pythotn-wechaty-logo.png" xmlns:media="http://search.yahoo.com/mrss/" /></entry><entry><title type="html">沟通后端系统和微信消息的桥梁</title><link href="https://wechaty.js.org/2020/12/10/johnwang71/" rel="alternate" type="text/html" title="沟通后端系统和微信消息的桥梁" /><published>2020-12-10T00:00:00+00:00</published><updated>2020-12-10T00:00:00+00:00</updated><id>https://wechaty.js.org/2020/12/10/johnwang71</id><content type="html" xml:base="https://wechaty.js.org/2020/12/10/johnwang71/">&lt;p&gt;困惑于各类后端系统与同事、客户和其他相关方的沟通：一方面是后端系统纷繁复杂，开发语言众多；另一方面是不同人群对邮件、短信等各自的喜好程度不同，相对而言，微信是商务人群中使用量较大的，虽然微信提供了公众号等方式集成，但恰恰是大多数微信使用者只会在非常必须才会去用的服务方式。&lt;/p&gt;
+
+&lt;p&gt;之前基于微信网页版的插件较多，也尝试过集成，不幸的是微信收掉了绝大多数微信用户的网页版登录权限。最近一个偶然机会接触到&lt;a href=&quot;https://github.com/wechaty&quot;&gt;wechaty&lt;/a&gt;，阅读了先前贡献者们的经验分享，立即有了参与的冲动，按机器人指导完成了注册获取token，开始了体验开发之旅。&lt;/p&gt;
+
+&lt;h2 id=&quot;超小的微信网关&quot;&gt;超小的微信网关&lt;/h2&gt;
+
+&lt;p&gt;本来最熟悉Java，但wechaty是js的，正好也用nodejs在做其他工作，就从它开始吧。考虑到需要与其他系统集成，将wechaty封装成微信通讯网关，设计使用restful的双向调用，解耦网关和后端系统。虽然最近特别事杂，紧赶慢赶也终于在15天token有效期完成了最小化产品的提交，可以满足包括好友、微信群操作和文字类消息互动的全部商务需求，仅仅100行代码出头。
+运行也很简单，参考README即可：
+&lt;img src=&quot;/assets/2020/12-johnwang71/wechaty-integration.png&quot; alt=&quot;安装&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;感谢wechaty提供了很好的思路，感谢wechaty-puppet-hostie提供了良好的设计，让我能够站在巨人肩膀之上快速完成工作，这样所有支持hostie的puppet都可以使用rock了，感谢所有帮助过 Rock 诞生的小伙伴！&lt;/p&gt;
+
+&lt;p&gt;经过一段时间测试，基本没发现掉线，服务也正常。
+如果喜欢，请了解体验审阅 &lt;a href=&quot;https://github.com/johnwang71/wechaty-integration&quot;&gt;https://github.com/johnwang71/wechaty-integration&lt;/a&gt; 这段短小的代码，更欢迎提出好的建议和问题！&lt;/p&gt;</content><author><name>johnwang71</name></author><category term="nodejs" /><category term="wechaty" /><category term="wechaty-puppet-padplus" /><summary type="html">困惑于各类后端系统与同事、客户和其他相关方的沟通：一方面是后端系统纷繁复杂，开发语言众多；另一方面是不同人群对邮件、短信等各自的喜好程度不同，相对而言，微信是商务人群中使用量较大的，虽然微信提供了公众号等方式集成，但恰恰是大多数微信使用者只会在非常必须才会去用的服务方式。</summary><media:thumbnail xmlns:media="http://search.yahoo.com/mrss/" url="https://wechaty.js.org/assets/2020/12-johnwang71/avartar.jpeg" /><media:content medium="image" url="https://wechaty.js.org/assets/2020/12-johnwang71/avartar.jpeg" xmlns:media="http://search.yahoo.com/mrss/" /></entry><entry><title type="html">Python-Wechaty 南京开源峰会之旅</title><link href="https://wechaty.js.org/2020/12/08/python-wechaty-open-source-journey/" rel="alternate" type="text/html" title="Python-Wechaty 南京开源峰会之旅" /><published>2020-12-08T00:00:00+00:00</published><updated>2020-12-08T00:00:00+00:00</updated><id>https://wechaty.js.org/2020/12/08/python-wechaty-open-source-journey</id><content type="html" xml:base="https://wechaty.js.org/2020/12/08/python-wechaty-open-source-journey/">&lt;p&gt;开源应该是每一个优秀程序员的必经之路&lt;/p&gt;
+
+&lt;h2 id=&quot;python-wechaty之开源软件2020峰会&quot;&gt;python-wechaty之开源软件2020峰会&lt;/h2&gt;
+
+&lt;p&gt;非常有幸能够参加此次是开源软件供应链2020峰会，本次峰会由中国科学院软件研究所、&lt;a href=&quot;https://openeuler.org/zh/&quot;&gt;openEuler&lt;/a&gt;社区主办，中科院软件研究所南京软件技术研究院承办，峰会主题为“共献·开源”，包括1个主论坛、7个分论坛以及1场学生专题报告，而我代表&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;wechaty&lt;/code&gt;社区导师之一参加此“开源&amp;amp;教育”分论坛的分享活动，会上有来自全国各地的开源软件从业者、企业技术专家、高校及科研机构代表、开源社区代表、学生等300余人现场参会、2.3万余人同步线上参会。&lt;/p&gt;
+
+&lt;h2 id=&quot;我是如何开始python-wechaty开源项目的&quot;&gt;我是如何开始python-wechaty开源项目的&lt;/h2&gt;
+
+&lt;p&gt;其实一切都要从一场活动开始…&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;各位同学以及已经工作了的同事，都可以尝试着参加一些开放性的沙龙和技术峰会，在会上你能够和其他人交流想法，探讨问题，结识志同道合的人，收获你意想不到的体验。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;在分享会上我了解到&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;wechaty&lt;/code&gt;项目，特别是被佳芮的live coding环节吸引到了，通过简单的几行代码就可以开发一个非常好玩的聊天机器人，接下来通过一段时间的学习和探索掌握了&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;wechaty&lt;/code&gt;的基本使用。&lt;/p&gt;
+
+&lt;p&gt;然而，最初的&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;wechaty&lt;/code&gt;版本只有&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;TypeScript&lt;/code&gt;版本，并没有目前的多语言版本，而我自己又是一个&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;python&lt;/code&gt;的忠实粉丝，觉得这么好用的一个开源框架怎么可能没有一个&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;python&lt;/code&gt;开发版本呢？这个疑问一直围绕在我的心头。&lt;/p&gt;
+
+&lt;p&gt;终于，在今年二月份疫情期间，大家都被困在家里，预期说被困，不如说是解放。因为我们拥有大把的时间坐在房间，和网友讨论各种问题，而&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;wechaty&lt;/code&gt;社区尤为活跃，当是我已能够帮助大家解决一部分问题。&lt;/p&gt;
+
+&lt;p&gt;突然，其中就有人开始问我心目中的那个问题了：为什么&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;wechaty&lt;/code&gt;没有一个&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;python&lt;/code&gt;版本的开发框架呢？作者（李卓桓）便开始鼓励我们上手开发，而我当时第一个报名（也不知道当时有什么勇气，现在看来非常感谢当初的那份无畏勇气），经过了两个月的折腾之后，便有了&lt;a href=&quot;https://github.com/wechaty/python-wechaty&quot;&gt;python-wechaty&lt;/a&gt;的第一个ding-dong版本。&lt;/p&gt;
+
+&lt;h2 id=&quot;开源项目并没有你想的那么难&quot;&gt;开源项目并没有你想的那么难&lt;/h2&gt;
+
+&lt;p&gt;其实在这两个月期间我过的还是挺痛苦的，因为作者（李卓桓）给&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;python-wechaty&lt;/code&gt;制定的代码质量要求还挺高的（高是一个相对性词），需要经过各种代码审查才能够通过，而这些代码审查的工具我是从来都没有用过，在实际开发的过程中遇到了各种坑儿。让我印象最深刻的就是需要解决python中最经典的问题：包的循环引用的问题。虽然解决方案有很多，可是需要寻找一种能够通过严格代码审查的解决方案对应当时我的而言还是非常有难度。&lt;/p&gt;
+
+&lt;p&gt;在开发的过程中，每个函数的命名，注释以及代码风格当时都做了很多的&lt;a href=&quot;https://github.com/wechaty/python-wechaty/wiki/Coding-Style&quot;&gt;讨论&lt;/a&gt;，让我印象最深刻的就是关于数组类型的命名的讨论：比如好友ID列表变量命名，有&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;room_ids&lt;/code&gt; 和 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;room_id_list&lt;/code&gt; 两种风格的讨论。通过这些非常细致的技术讨论，让我对编程有了一个全新的认识：写代码并不只是完成了一个功能就行了，而是需要在阅读性，代码风格，代码鲁棒性等各个层面作出权衡。&lt;/p&gt;
+
+&lt;p&gt;虽然以上都是一些小细节的问题，可是正是细节处才能够体现出能力，而只需要付出足够的时间，就能够被解决，你就能够拥有这些能力。&lt;/p&gt;
+
+&lt;p&gt;所以开源项目并没有你想象的那么难，&lt;strong&gt;只需要你付出足够的努力就可以获得对应的硬实力&lt;/strong&gt;。&lt;/p&gt;
+
+&lt;h2 id=&quot;开源项目并没有你想的那么简单&quot;&gt;开源项目并没有你想的那么简单&lt;/h2&gt;
+
+&lt;p&gt;自从开源项目逐步稳定，参与的人也越来越多，于是你作为项目的主要推动人，需要组织和管理项目的&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;issue&lt;/code&gt;和&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pull request&lt;/code&gt;，需要协调参与项目的每个人，而大家都是来自于开源社区，处于一个松散合作，并非使用强制性约束来做项目，所以此时的项目管理就变得非常难以推动。&lt;/p&gt;
+
+&lt;p&gt;于是我请教了&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;wechaty&lt;/code&gt;开源社区多个不同的作者，他们不吝赐教，给予我非常多有价值的建议以及未来的一些规划的看法，于是我开始进行一些调整，和团队的人积极沟通每一个细节问题，并能够顺利的基于github中的issue和pr来管理所有的事情。&lt;/p&gt;
+
+&lt;p&gt;开源项目其实是一种以开源的思想来和世界上任何一个人合作开发，并没有一种强制性的约束，更多的是开放性思维来协作，这些东西都是需要深度学习的，&lt;/p&gt;
+
+&lt;p&gt;所以开源项目并没有你想象的那么简单，&lt;strong&gt;只需要你付出足够的坚持就可以获得对应的软实力&lt;/strong&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;一定要积极参加开源项目&quot;&gt;一定要积极参加开源项目&lt;/h2&gt;
+
+&lt;p&gt;其实很多开源项目都非常欢迎新鲜的血液，也愿意去指导那些愿意学习的同学，所以如果你有一颗想要开源的心，就勇敢的尝试参与开源项目把，在里面你将收获非常多的提升和帮助，也会帮你认识很多优秀的人。&lt;/p&gt;</content><author><name>wj-mcat</name></author><category term="story" /><category term="news" /><category term="wechaty" /><category term="python-wechaty" /><summary type="html">开源应该是每一个优秀程序员的必经之路 python-wechaty之开源软件2020峰会 非常有幸能够参加此次是开源软件供应链2020峰会，本次峰会由中国科学院软件研究所、openEuler社区主办，中科院软件研究所南京软件技术研究院承办，峰会主题为“共献·开源”，包括1个主论坛、7个分论坛以及1场学生专题报告，而我代表wechaty社区导师之一参加此“开源&amp;amp;教育”分论坛的分享活动，会上有来自全国各地的开源软件从业者、企业技术专家、高校及科研机构代表、开源社区代表、学生等300余人现场参会、2.3万余人同步线上参会。 我是如何开始python-wechaty开源项目的 其实一切都要从一场活动开始… 各位同学以及已经工作了的同事，都可以尝试着参加一些开放性的沙龙和技术峰会，在会上你能够和其他人交流想法，探讨问题，结识志同道合的人，收获你意想不到的体验。 在分享会上我了解到wechaty项目，特别是被佳芮的live coding环节吸引到了，通过简单的几行代码就可以开发一个非常好玩的聊天机器人，接下来通过一段时间的学习和探索掌握了wechaty的基本使用。 然而，最初的wechaty版本只有TypeScript版本，并没有目前的多语言版本，而我自己又是一个python的忠实粉丝，觉得这么好用的一个开源框架怎么可能没有一个python开发版本呢？这个疑问一直围绕在我的心头。 终于，在今年二月份疫情期间，大家都被困在家里，预期说被困，不如说是解放。因为我们拥有大把的时间坐在房间，和网友讨论各种问题，而wechaty社区尤为活跃，当是我已能够帮助大家解决一部分问题。 突然，其中就有人开始问我心目中的那个问题了：为什么wechaty没有一个python版本的开发框架呢？作者（李卓桓）便开始鼓励我们上手开发，而我当时第一个报名（也不知道当时有什么勇气，现在看来非常感谢当初的那份无畏勇气），经过了两个月的折腾之后，便有了python-wechaty的第一个ding-dong版本。 开源项目并没有你想的那么难 其实在这两个月期间我过的还是挺痛苦的，因为作者（李卓桓）给python-wechaty制定的代码质量要求还挺高的（高是一个相对性词），需要经过各种代码审查才能够通过，而这些代码审查的工具我是从来都没有用过，在实际开发的过程中遇到了各种坑儿。让我印象最深刻的就是需要解决python中最经典的问题：包的循环引用的问题。虽然解决方案有很多，可是需要寻找一种能够通过严格代码审查的解决方案对应当时我的而言还是非常有难度。 在开发的过程中，每个函数的命名，注释以及代码风格当时都做了很多的讨论，让我印象最深刻的就是关于数组类型的命名的讨论：比如好友ID列表变量命名，有room_ids 和 room_id_list 两种风格的讨论。通过这些非常细致的技术讨论，让我对编程有了一个全新的认识：写代码并不只是完成了一个功能就行了，而是需要在阅读性，代码风格，代码鲁棒性等各个层面作出权衡。 虽然以上都是一些小细节的问题，可是正是细节处才能够体现出能力，而只需要付出足够的时间，就能够被解决，你就能够拥有这些能力。 所以开源项目并没有你想象的那么难，只需要你付出足够的努力就可以获得对应的硬实力。 开源项目并没有你想的那么简单 自从开源项目逐步稳定，参与的人也越来越多，于是你作为项目的主要推动人，需要组织和管理项目的issue和pull request，需要协调参与项目的每个人，而大家都是来自于开源社区，处于一个松散合作，并非使用强制性约束来做项目，所以此时的项目管理就变得非常难以推动。 于是我请教了wechaty开源社区多个不同的作者，他们不吝赐教，给予我非常多有价值的建议以及未来的一些规划的看法，于是我开始进行一些调整，和团队的人积极沟通每一个细节问题，并能够顺利的基于github中的issue和pr来管理所有的事情。 开源项目其实是一种以开源的思想来和世界上任何一个人合作开发，并没有一种强制性的约束，更多的是开放性思维来协作，这些东西都是需要深度学习的， 所以开源项目并没有你想象的那么简单，只需要你付出足够的坚持就可以获得对应的软实力 一定要积极参加开源项目 其实很多开源项目都非常欢迎新鲜的血液，也愿意去指导那些愿意学习的同学，所以如果你有一颗想要开源的心，就勇敢的尝试参与开源项目把，在里面你将收获非常多的提升和帮助，也会帮你认识很多优秀的人。</summary><media:thumbnail xmlns:media="http://search.yahoo.com/mrss/" url="https://wechaty.js.org/assets/2020/python-wechaty/wechaty-nanjing-picture.jpg" /><media:content medium="image" url="https://wechaty.js.org/assets/2020/python-wechaty/wechaty-nanjing-picture.jpg" xmlns:media="http://search.yahoo.com/mrss/" /></entry><entry><title type="html">基于Wechaty开发的群聊小助手</title><link href="https://wechaty.js.org/2020/12/08/wechaty-bot-hostie/" rel="alternate" type="text/html" title="基于Wechaty开发的群聊小助手" /><published>2020-12-08T00:00:00+00:00</published><updated>2020-12-08T00:00:00+00:00</updated><id>https://wechaty.js.org/2020/12/08/wechaty-bot-hostie</id><content type="html" xml:base="https://wechaty.js.org/2020/12/08/wechaty-bot-hostie/">&lt;blockquote&gt;
+  &lt;p&gt;作者: &lt;a href=&quot;https://github.com/mumup&quot;&gt;Penley&lt;/a&gt; 前端开发工程师
+Code: &lt;a href=&quot;https://github.com/mumup/cat-room&quot;&gt;Github&lt;/a&gt; 微信机器人，群聊小助手&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h2 id=&quot;wechaty&quot;&gt;wechaty&lt;/h2&gt;
+
+&lt;p&gt;GitHub上搜了一圈，看到了挺多微信bot的方案，后面决定使用wechaty，因为感觉设计得很优雅，6行代码就可以轻松构建一个wxbot。&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://wechaty.js.org/docs/&quot;&gt;官方文档&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;文档近期正在频繁更新中&lt;/p&gt;
+
+&lt;p&gt;目前的需求很简单，在猫群里置放一个可以唠嗑可以玩游戏的机器人&lt;/p&gt;
+
+&lt;p&gt;实现了几个功能&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;成语接龙&lt;/li&gt;
+  &lt;li&gt;看图猜成语&lt;/li&gt;
+  &lt;li&gt;接入了图灵机器人&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;未实现&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;根据前一天聊天内容生成词云&lt;/li&gt;
+  &lt;li&gt;猫粮查询&lt;/li&gt;
+  &lt;li&gt;猫疾病的查询&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;目前图灵机器人聊天使用了第三方的接口，需要注册&lt;a href=&quot;https://www.tianapi.com/&quot;&gt;天行api&lt;/a&gt;方可使用，token需填入.env文件中&lt;/p&gt;
+
+&lt;p&gt;核心代码&lt;/p&gt;
+
+&lt;div class=&quot;language-js highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kd&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;bot&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Wechaty&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;({&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;puppet&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;dl&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;wechaty-puppet-hostie&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;puppetOptions&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;token&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
+
+&lt;span class=&quot;nx&quot;&gt;bot&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;on&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;scan&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;qrcode&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;status&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;status&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;===&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;ScanStatus&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Waiting&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+      &lt;span class=&quot;nx&quot;&gt;QrcodeTerminal&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;generate&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;qrcode&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;na&quot;&gt;small&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;true&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;})&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;})&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;on&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;login&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;async&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;user&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;console&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;log&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;`user: &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;JSON&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;stringify&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;user&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)}&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;`&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;})&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;on&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;error&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;error&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;console&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;error&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;error&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;})&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;async&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;main&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;await&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;bot&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;start&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+
+  &lt;span class=&quot;c1&quot;&gt;//  储存一波数据&lt;/span&gt;
+  &lt;span class=&quot;kd&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;store&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;any&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[]&lt;/span&gt;
+
+  &lt;span class=&quot;nx&quot;&gt;_config&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;activeRoomIds&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;forEach&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;async&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;item&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;kd&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;room&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;await&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;bot&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Room&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;find&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;({&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;topic&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;item&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;})&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;room&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+      &lt;span class=&quot;nx&quot;&gt;store&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;push&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;({&lt;/span&gt;
+        &lt;span class=&quot;na&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;room&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+        &lt;span class=&quot;na&quot;&gt;active&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;dl&quot;&gt;''&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;})&lt;/span&gt;
+  
+      &lt;span class=&quot;c1&quot;&gt;// 群信息&lt;/span&gt;
+      &lt;span class=&quot;nx&quot;&gt;room&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;on&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;message&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;async&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;message&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;nx&quot;&gt;roomMessageHandler&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;message&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;room&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;store&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;})&lt;/span&gt;
+      &lt;span class=&quot;nx&quot;&gt;room&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;on&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;join&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;inviteeList&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;inviter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;nx&quot;&gt;roomJoinHandler&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;room&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;inviteeList&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;inviter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;})&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;})&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;nx&quot;&gt;main&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;由于padplus马上要废弃，所以使用的是puppet-hostie，具体api可以查看官网文档，目前有少许功能并未实现，比较遗憾，等后续功能更加完善，准备用vue3+express做一个后台的管理系统，方便管理机器人。&lt;/p&gt;
+
+&lt;h2 id=&quot;安装&quot;&gt;安装&lt;/h2&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;npm &lt;span class=&quot;nb&quot;&gt;install&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;运行&quot;&gt;运行&lt;/h2&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;npm run main
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;</content><author><name>Penley</name></author><category term="project" /><category term="nodejs" /><category term="wechaty" /><category term="wechaty-puppet-donut" /><summary type="html">作者: Penley 前端开发工程师 Code: Github 微信机器人，群聊小助手</summary><media:thumbnail xmlns:media="http://search.yahoo.com/mrss/" url="https://wechaty.js.org/assets/2020/wechaty-bot-hostie/img-func.jpeg" /><media:content medium="image" url="https://wechaty.js.org/assets/2020/wechaty-bot-hostie/img-func.jpeg" xmlns:media="http://search.yahoo.com/mrss/" /></entry><entry><title type="html">Wechaty Puppet Service WxWork Beta 版发布公告</title><link href="https://wechaty.js.org/2020/12/07/wxwork-release/" rel="alternate" type="text/html" title="Wechaty Puppet Service WxWork Beta 版发布公告" /><published>2020-12-07T00:00:00+00:00</published><updated>2020-12-07T00:00:00+00:00</updated><id>https://wechaty.js.org/2020/12/07/wxwork-release</id><content type="html" xml:base="https://wechaty.js.org/2020/12/07/wxwork-release/">&lt;p&gt;恭喜 WxWork 作为 Wechaty 社区新的 Puppet Service 正式进入 Beta 版！经过历时一个月的测试，WxWork 现在已经通过社区验证，可以正式售卖给社区的小伙伴了！&lt;/p&gt;
+
+&lt;p&gt;想要使用的，请点击&lt;a href=&quot;https://qiwei.juzibot.com/user/login?isWechaty=true&quot;&gt;wxwork 购买链接&lt;/a&gt; 购买吧！&lt;/p&gt;
+
+&lt;h2 id=&quot;关于-wechaty-puppet-service-wxwork&quot;&gt;关于 Wechaty Puppet Service WxWork&lt;/h2&gt;
+
+&lt;p&gt;WxWork 是 &lt;a href=&quot;https://github.com/juzibot/wxwork-tester&quot;&gt;juzibot&lt;/a&gt; 基于 wechaty-puppet-hostie 做的新 puppet service，句子互动围绕微信生态为客户提供智能营销和销售服务，帮助企业引流并实现转化，客户覆盖教育、保险、大健康等多个领域。曾入选百度AI加速器 和 Facebook 大陆首期加速器，获得PreAngel、Plug and Play，Y Combination, TSVC和阿尔法公社多家中美机构投资。 而在今年，句子互动更加聚焦在企业微信，通过为客户提供 SCRM 系统帮助客户实现引流和转化，因此今年发布了 &lt;strong&gt;企业微信&lt;/strong&gt; 的 puppet。&lt;/p&gt;
+
+&lt;p&gt;关于 Wechaty Puppet WxWork Beta 版的发布历程如下：&lt;/p&gt;
+
+&lt;h2 id=&quot;wxwork-的-alpha-release&quot;&gt;WxWork 的 Alpha Release&lt;/h2&gt;
+
+&lt;ul class=&quot;task-list&quot;&gt;
+  &lt;li class=&quot;task-list-item&quot;&gt;&lt;input type=&quot;checkbox&quot; class=&quot;task-list-item-checkbox&quot; disabled=&quot;disabled&quot; checked=&quot;checked&quot; /&gt;写一个 getting started 告诉开发者如何将这个 puppet 跑起来: &lt;a href=&quot;https://github.com/juzibot/wxwork-tester&quot;&gt;https://github.com/juzibot/wxwork-tester&lt;/a&gt;&lt;/li&gt;
+  &lt;li class=&quot;task-list-item&quot;&gt;&lt;input type=&quot;checkbox&quot; class=&quot;task-list-item-checkbox&quot; disabled=&quot;disabled&quot; checked=&quot;checked&quot; /&gt;puppet service provider 的 token 要通过 api.chatie.io 发布，以最大化提升开发者社区体验。&lt;/li&gt;
+  &lt;li class=&quot;task-list-item&quot;&gt;&lt;input type=&quot;checkbox&quot; class=&quot;task-list-item-checkbox&quot; disabled=&quot;disabled&quot; checked=&quot;checked&quot; /&gt;token 设置规范为：puppet_wxwork_XXX&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;为了能让开发者更好的了解如何运行 WxWork, 在这里给出大家运行的最小化代码：&lt;/p&gt;
+
+&lt;div class=&quot;language-ts highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Wechaty&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;dl&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;wechaty&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;'&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;ScanStatus&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;dl&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;wechaty-puppet&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;'&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;QrcodeTerminal&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;dl&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;qrcode-terminal&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+
+&lt;span class=&quot;kd&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;token&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;dl&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;get a wxwork token from: https://github.com/wechaty/puppet-services#buy-token&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;'&lt;/span&gt;
+
+&lt;span class=&quot;kd&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;bot&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Wechaty&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;({&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;puppet&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;dl&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;wechaty-puppet-hostie&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// 注意这里是 wechaty-puppet-hostie 而不是 wechaty-puppet-wxwork&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;puppetOptions&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;token&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
+
+&lt;span class=&quot;nx&quot;&gt;bot&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;on&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;scan&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;qrcode&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;status&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;status&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;===&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;ScanStatus&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Waiting&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+      &lt;span class=&quot;nx&quot;&gt;QrcodeTerminal&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;generate&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;qrcode&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;na&quot;&gt;small&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;true&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;})&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;})&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;on&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;login&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;async&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;user&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;console&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;log&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;`user: &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;JSON&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;stringify&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;user&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)}&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;`&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;})&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;on&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;message&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;async&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;message&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;console&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;log&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;`message: &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;JSON&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;stringify&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;message&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)}&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;`&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;})&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;start&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;介绍-wechaty-puppet-hostie&quot;&gt;介绍 wechaty-puppet-hostie&lt;/h3&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;This part is written by Huan&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;在 Wechaty 的发展过程中，我们曾经发布过很多 Wechaty Puppet ，比如 Web 协议的 wechaty-puppet-puppeteer， Pad 协议的 wechaty-puppet-padplus ，Mac 协议的 wechaty-puppet-macpro，iOS 协议的 wechaty-puppet-iosbird ，等等。&lt;/p&gt;
+
+&lt;p&gt;所以，如果你是一个随着 Wechaty 发展一路走来的开发者，那么你会记得，过去每一个不同的协议，我们都需要在运行 Wechaty 的本地环境中，安装上述的 NPM 包，来启用对应的协议。&lt;/p&gt;
+
+&lt;p&gt;然而，Wechaty 社区在发展过程中，我们发现其实针对不同的协议，其核心的区别在于 Wechaty Puppet Abstract Class 这个抽象层之下的逻辑实现，而 Wechaty Puppet API 是完全一致的。所以，我们如果能够把 Wechaty Puppet API 及其之上层的代码重用，而将其之下层面的代码进行 gRPC 化封装，这样我们就能够通过一个 Wechaty Puppet 的实现，最终得以支持不同的底层协议。这就是 wechaty-puppet-hostie 的由来。&lt;/p&gt;
+
+&lt;p&gt;简而言之，&lt;a href=&quot;https://github.com/wechaty/wechaty-puppet-hostie&quot;&gt;Wechaty Puppet Hostie&lt;/a&gt; 是一个可以兼容任意 Wechaty Puppet 协议的模块，Wechaty 只需要安装 wechaty-puppet-hostie ，然后通过设置 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;WECHATY_PUPPET_HOSTIE_TOKEN&lt;/code&gt;，即可通过 gRPC 协议，与 token 所对应的 gRPC 服务器进行通讯，实现 Wechaty Puppet Service 化，而提供 Wechaty Puppet Service 的第三方，既是我们称之为 &lt;a href=&quot;https://github.com/wechaty/puppet-services&quot;&gt;Wechaty Puppet Service Provider&lt;/a&gt; 的角色。&lt;/p&gt;
+
+&lt;p&gt;在未来，Wechaty 社区计划大部分的 Puppet Service 都将基于 wechaty-puppet-hostie 进行发布和使用。同时针对某些特定的 Puppet Service ，比如 &lt;a href=&quot;https://www.npmjs.com/package/wechaty-puppet-padlocal&quot;&gt;wechaty-puppet-padlocal&lt;/a&gt; (&lt;a href=&quot;https://github.com/padlocal/padlocal-client-ts&quot;&gt;PadLocal&lt;/a&gt;可以使用本地服务器 IP 与 Server 进行连接），也可以通过本地运行一个 Hostie Token Gateway 进行转换。（详见 &lt;a href=&quot;https://github.com/wechaty/wechaty/issues/1986&quot;&gt;Issue #1986&lt;/a&gt;)&lt;/p&gt;
+
+&lt;p&gt;目前，在社区最佳实践中，使用 wechaty-puppet-hostie 的方法如下：&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;export &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;WECHATY_PUPPET&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;wechaty-puppet-hostie
+&lt;span class=&quot;nb&quot;&gt;export &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;WECHATY_PUPPET_HOSTIE_TOKEN&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;__YOUR_TOKEN__
+
+// Start your bot with the above two variables
+ts-node bot.ts
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;在上面的 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;__YOUR_TOKEN__&lt;/code&gt; 可以是任何的 Wechaty Puppet Service Token。了解如何获取 Wechaty Puppet Service Token 可以官网介绍： &lt;a href=&quot;https://wechaty.js.org/docs/puppet-services/&quot;&gt;https://wechaty.js.org/docs/puppet-services/&lt;/a&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;wxwork-的-alpha-test&quot;&gt;WxWork 的 Alpha Test&lt;/h2&gt;
+
+&lt;p&gt;WxWork 通过了 Alpha test 的内容，以下是 Rock 支持的功能清单，并和已有的Puppet进行对比。&lt;/p&gt;
+
+&lt;h3 id=&quot;puppet-comparison&quot;&gt;Puppet Comparison&lt;/h3&gt;
+
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th&gt;Puppet&lt;/th&gt;
+      &lt;th&gt;wxwork&lt;/th&gt;
+      &lt;th&gt;rock&lt;/th&gt;
+      &lt;th&gt;donut&lt;/th&gt;
+      &lt;th&gt;padplus&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;支持账号&lt;/td&gt;
+      &lt;td&gt;企业微信&lt;/td&gt;
+      &lt;td&gt;个人微信&lt;/td&gt;
+      &lt;td&gt;个人微信&lt;/td&gt;
+      &lt;td&gt;个人微信&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;消息&gt;&lt;/消息&gt;&lt;/td&gt;
+      &lt;td&gt; &lt;/td&gt;
+      &lt;td&gt; &lt;/td&gt;
+      &lt;td&gt; &lt;/td&gt;
+      &lt;td&gt; &lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;收发文本&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;收发个人名片&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;收发图文链接&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;发送图片、文件&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅（较慢）&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅（对内容有大小限制，20M以下）&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;接收图片、文件&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅（对内容有大小限制，25M以下）&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;发送视频&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅（较慢）&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;接收视频&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;发送小程序&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;接收动图&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;❌&lt;/td&gt;
+      &lt;td&gt;❌&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;发送动图&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅（以文件形式发送）&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;接收语音消息&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;❌&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;发送语音消息&lt;/td&gt;
+      &lt;td&gt;❌&lt;/td&gt;
+      &lt;td&gt;❌&lt;/td&gt;
+      &lt;td&gt;❌&lt;/td&gt;
+      &lt;td&gt;❌&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;转发文本&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;转发图片&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;转发图文链接&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;❌&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;转发音频&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;❌&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;❌&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;转发视频&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;转发文件&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;转发动图&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;❌&lt;/td&gt;
+      &lt;td&gt;❌&lt;/td&gt;
+      &lt;td&gt;❌&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;转发小程序&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;群组&gt;&lt;/群组&gt;&lt;/td&gt;
+      &lt;td&gt; &lt;/td&gt;
+      &lt;td&gt; &lt;/td&gt;
+      &lt;td&gt; &lt;/td&gt;
+      &lt;td&gt; &lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;创建群聊&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;设置群公告&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;获取群公告&lt;/td&gt;
+      &lt;td&gt;❌&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;❌&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;群二维码&lt;/td&gt;
+      &lt;td&gt;❌&lt;/td&gt;
+      &lt;td&gt;❌&lt;/td&gt;
+      &lt;td&gt;❌&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;拉人进群&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;踢人出群&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;退出群聊&lt;/td&gt;
+      &lt;td&gt;❌&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;改群名称&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;❌&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;入群事件&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;离群事件&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;群名称变更事件&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;❌&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;@群成员&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;群列表&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;群成员列表&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;群详情&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;联系人&gt;&lt;/联系人&gt;&lt;/td&gt;
+      &lt;td&gt; &lt;/td&gt;
+      &lt;td&gt; &lt;/td&gt;
+      &lt;td&gt; &lt;/td&gt;
+      &lt;td&gt; &lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;修改备注&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;❌&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;添加好友&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;❌&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;自动通过好友&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;好友列表&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;好友详情&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;其他&gt;&lt;/其他&gt;&lt;/td&gt;
+      &lt;td&gt; &lt;/td&gt;
+      &lt;td&gt; &lt;/td&gt;
+      &lt;td&gt; &lt;/td&gt;
+      &lt;td&gt; &lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;登录事件&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;扫码状态&lt;/td&gt;
+      &lt;td&gt;❌&lt;/td&gt;
+      &lt;td&gt;❌&lt;/td&gt;
+      &lt;td&gt;❌&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;登出事件&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;❌&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;主动退出登录&lt;/td&gt;
+      &lt;td&gt;❌&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+      &lt;td&gt;✅&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;依赖协议&lt;/td&gt;
+      &lt;td&gt;Windows&lt;/td&gt;
+      &lt;td&gt;iPad&lt;/td&gt;
+      &lt;td&gt;Windows&lt;/td&gt;
+      &lt;td&gt;iPad&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;h2 id=&quot;wxwork-的-beta-test&quot;&gt;WxWork 的 Beta Test&lt;/h2&gt;
+
+&lt;ul class=&quot;task-list&quot;&gt;
+  &lt;li class=&quot;task-list-item&quot;&gt;&lt;input type=&quot;checkbox&quot; class=&quot;task-list-item-checkbox&quot; disabled=&quot;disabled&quot; checked=&quot;checked&quot; /&gt;压力测试：&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th&gt;项目名&lt;/th&gt;
+      &lt;th&gt;详情&lt;/th&gt;
+      &lt;th&gt;状态&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;crash&lt;/td&gt;
+      &lt;td&gt;崩溃，测扫码登录ready事件顺序是否正常&lt;/td&gt;
+      &lt;td&gt;通过&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;flood-message&lt;/td&gt;
+      &lt;td&gt;群发消息，测大批量发消息是否都有回调&lt;/td&gt;
+      &lt;td&gt;通过&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;group-chat&lt;/td&gt;
+      &lt;td&gt;群聊功能，测群加载人数，建群离群操作是否正常&lt;/td&gt;
+      &lt;td&gt;通过&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;loading&lt;/td&gt;
+      &lt;td&gt;加载，测加载时长，联系人和群的数量是否匹配&lt;/td&gt;
+      &lt;td&gt;通过&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;loading-lost-tag&lt;/td&gt;
+      &lt;td&gt;测启动奔溃导致的标签备注丢失问题&lt;/td&gt;
+      &lt;td&gt;通过&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;receive-and-send-message&lt;/td&gt;
+      &lt;td&gt;测收发不同类型的消息都正常&lt;/td&gt;
+      &lt;td&gt;通过&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;receive-small-image&lt;/td&gt;
+      &lt;td&gt;测试是否有收不到小图片的情况&lt;/td&gt;
+      &lt;td&gt;测试是否有收不到小图片的情况&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;ul class=&quot;task-list&quot;&gt;
+  &lt;li class=&quot;task-list-item&quot;&gt;&lt;input type=&quot;checkbox&quot; class=&quot;task-list-item-checkbox&quot; disabled=&quot;disabled&quot; checked=&quot;checked&quot; /&gt;产品测试：
+    &lt;ul class=&quot;task-list&quot;&gt;
+      &lt;li class=&quot;task-list-item&quot;&gt;&lt;input type=&quot;checkbox&quot; class=&quot;task-list-item-checkbox&quot; disabled=&quot;disabled&quot; checked=&quot;checked&quot; /&gt;通过&lt;a href=&quot;https://crm.botorange.com/&quot;&gt;句子秒回&lt;/a&gt;的在线测试，详见&lt;a href=&quot;https://github.com/wechaty/puppet-services/wiki/Product-Test&quot;&gt;Product Test&lt;/a&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;WxWork 的产品测试，已完成 100%，同时，&lt;a href=&quot;https://www.juzibot.com&quot;&gt;句子互动&lt;/a&gt; 提供基于企业微信的 SCRM 系统，并基于 WxWork 提供了可视化的工具，有兴趣的小伙伴也可以来 &lt;a href=&quot;https://qiwei.juzibot.com/user/login?isWechaty=true&quot;&gt;句客宝&lt;/a&gt; 通过企业微信扫码登陆后体验。&lt;/p&gt;
+
+&lt;h2 id=&quot;最后要在此感谢-puppet-provider-为社区持续做出如下贡献&quot;&gt;最后，要在此感谢 puppet provider 为社区持续做出如下贡献：&lt;/h2&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;为每个 wechaty contributor 提供2个免费token&lt;/li&gt;
+  &lt;li&gt;未申请开源激励计划的开发者，提供15天的免费测试token&lt;/li&gt;
+&lt;/ol&gt;</content><author><name>lijiarui</name></author><category term="announcement" /><category term="news" /><category term="puppet-service-provider" /><category term="wxwork" /><summary type="html">恭喜 WxWork 作为 Wechaty 社区新的 Puppet Service 正式进入 Beta 版！经过历时一个月的测试，WxWork 现在已经通过社区验证，可以正式售卖给社区的小伙伴了！</summary><media:thumbnail xmlns:media="http://search.yahoo.com/mrss/" url="https://wechaty.js.org/assets/2020/12-07-wxwork/wecom.png" /><media:content medium="image" url="https://wechaty.js.org/assets/2020/12-07-wxwork/wecom.png" xmlns:media="http://search.yahoo.com/mrss/" /></entry><entry><title type="html">基于Wechaty打造实时爬取产品信息并分享给用户群</title><link href="https://wechaty.js.org/2020/11/10/product-spider-for-sharing/" rel="alternate" type="text/html" title="基于Wechaty打造实时爬取产品信息并分享给用户群" /><published>2020-11-10T00:00:00+00:00</published><updated>2020-11-10T00:00:00+00:00</updated><id>https://wechaty.js.org/2020/11/10/product-spider-for-sharing</id><content type="html" xml:base="https://wechaty.js.org/2020/11/10/product-spider-for-sharing/">&lt;p&gt;基于Wechaty打造实时爬取产品信息并分享给用户群&lt;/p&gt;
+
+&lt;h2 id=&quot;1-主要功能&quot;&gt;1. 主要功能&lt;/h2&gt;
+
+&lt;p&gt;公司想实现通过爬取walmart的降价信息或者是新入库的产品来提供给客户，方便客户及时地获得这些信息，用来抢购。&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;通过walmart提供的api，用python多线程异步地爬取产品，从而得到降价信息&lt;/li&gt;
+  &lt;li&gt;python把读取到的产品写入一个具有‘read false’标志位的txt文件中&lt;/li&gt;
+  &lt;li&gt;wechaty通过设置定时任务读取这个txt文件，并将标志位置为‘read True’&lt;/li&gt;
+  &lt;li&gt;wechaty处理爬取到的字符串，并将处理后的产品图像，产品信息实时的发送到群聊中&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h2 id=&quot;2-wechaty框架介绍&quot;&gt;2. Wechaty框架介绍&lt;/h2&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://github.com/wechaty/wechaty&quot;&gt;Weachaty&lt;/a&gt; 是一个开源的的对话机器人 SDK，支持个人微信号。它是一个使用Typescript 构建的Node.js 应用。支持多种微信接入方案，包括网页，ipad，ios，windows， android 等。同时支持Linux, Windows, Darwin(OSX/Mac) 和 Docker 多个平台。
+在GitHub上可以找到很多支持微信个人号接入的第三方类库，其中大多都是基于Web Wechat的API来实现的，如基于Python的WeixinBot，基于Node.js的Wechaty等。少数支持非Web协议的库，大多是商业私有闭源的，Wechaty是少有的开源项目支持非Web协议的类库。且目前来讲，Wechaty已经开始陆续支持多种编程语言了（Go、Python、Java等等）。官方说只需要6行代码，就可以做到自动管理微信消息了。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-JavaScript&quot;&gt;import { Wechaty } from 'wechaty'
+Wechaty.instance()
+.on('scan',         qrcode      =&amp;gt; console.log('扫码登录'))
+.on('login',        user        =&amp;gt; console.log('登录成功：' + user))
+.on('message',      message     =&amp;gt; console.log('收到消息：' + message))
+.on('friendship',   friendship  =&amp;gt; console.log('收到好友请求：' + friendship))
+.on('room-invite',  invitation  =&amp;gt; console.log('收到入群邀请：' + invitation))
+.start()
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;可以看到，Wechaty能做到的事情很多，可以收消息、发消息、好友管理、群管理，更多功能可以参考官方文档&lt;a href=&quot;https://wechaty.js.org/v/zh/&quot;&gt;中文版&lt;/a&gt;、&lt;a href=&quot;https://wechaty.js.org/docs/introduction/README&quot;&gt;英文版&lt;/a&gt;英文版的文档更新更全更新。&lt;/p&gt;
+
+&lt;h2 id=&quot;3-安装wechaty&quot;&gt;3. 安装Wechaty&lt;/h2&gt;
+
+&lt;p&gt;原本一开始我是想着用Python版本的 &lt;a href=&quot;https://github.com/wechaty/python-wechaty-getting-started&quot;&gt;Wechaty&lt;/a&gt; 的，因为爬虫写的也用的是python，这样就可以直接把机器人和爬虫更好的整合，但是python版本的机器人运行时会出现报错，所以就选择了社区更为完善的ts版本。对于typescript语言来说是javascript的一个超集，对于使用过React框架开发的人员来说还是比较友好的。&lt;/p&gt;
+
+&lt;h3 id=&quot;使用wechaty&quot;&gt;使用wechaty&lt;/h3&gt;
+
+&lt;p&gt;我使用的系统是windows10，第一步首先是在github处克隆源码&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;git clone https://github.com/wechaty/wechaty-getting-started.git
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;安装完毕进入文件夹目录下，下载相关的依赖&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;npm &lt;span class=&quot;nb&quot;&gt;install
+&lt;/span&gt;npm start
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;如何使用wechaty&quot;&gt;如何使用Wechaty&lt;/h3&gt;
+
+&lt;p&gt;本来想图个方便使用网页版微信来实现这些功能，但是由于微信官方的原因，我的账号的网页版功能已经不能使用，所以就只好使用padplus的令牌来实现微信机器人的功能，首先要初始化wechaty类&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-Typescript&quot;&gt;const bot = new Wechaty({
+  name: 'ding-dong-bot',
+  /**
+   * Specify a `puppet` for a specific protocol (Web/Pad/Mac/Windows, etc).
+   *
+   * You can use the following providers:
+   *  - wechaty-puppet-hostie
+   *  - wechaty-puppet-puppeteer
+   *  - wechaty-puppet-padplus
+   *  - etc.
+   *
+   * Learn more about Wechaty Puppet Providers at:
+   *  https://github.com/wechaty/wechaty-puppet/wiki/Directory
+   */
+
+  puppet: puppet,
+
+})
+const token = 'your token'
+const puppet = new PuppetPadplus({
+  token,
+})
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;为了实现业务逻辑，那么必须要调整onlogin()函数的功能，在里面加入main()函数，当然main是一个定时器函数，设定间隔读取爬虫和机器人的接口文件，如果读取到了，就接下来找到群来发送读取到的信息。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-Typescript&quot;&gt;function onLogin (user: Contact) {
+  log.info('StarterBot', '%s login', user)
+  main()
+}
+async function main () {
+  let imagehref0 = ''
+  let jslistofpd0 = ''
+  let flagOfSay = 0
+  // let imagehref1 = ''
+  let jslistofpd1 = ''
+  // let imagehref2 = ''
+  // let jslistofpd2 = ''
+  // todo 改变文件路径位置，与沃尔玛的文件位置同源
+
+  setInterval( function () {
+    fs.readFile(
+      'D:\\scriptworm\\walmart-data-local\\productPriceDropAndRestock0.txt',
+      (err:any,data:any) =&amp;gt;
+    {
+      if (err) {
+              console.error(err)
+              return
+            }
+      console.log('[datatostring]', data.toString())
+      // imagehref0  = jslistofpd0.substring(jslistofpd0.search(/imagehref/) + 10, jslistofpd0.search(/FFFFFF/) + 6)
+      // jslistofpd0 = jslistofpd0.substring(jslistofpd0.search(/name/), jslistofpd0.search(/onlyapi/) + 7)
+      let str1 = data.toString()
+      let a1 = str1.search(/_read_False_/)
+      console.log(a1)
+      let a2 = str1.search(/_read_True_/)
+      console.log(a2)
+      if (a1 == 0) {
+        // todo: contact.say(something)
+        console.log(str1)
+        jslistofpd0 = data.toString()
+        console.log(jslistofpd0)
+        imagehref0  = jslistofpd0.substring(jslistofpd0.search(/imagehref/) + 10, jslistofpd0.search(/FFFFFF/) + 6)
+
+        jslistofpd1 = jslistofpd0.substring(jslistofpd0.search(/购物链接/) + 5, jslistofpd0.search(/%3Faffp1%3D/))
+        jslistofpd0 = jslistofpd0.substring(jslistofpd0.search(/商品名称/) + 5, jslistofpd0.search(/购物链接/))
+        fs.writeFile('D:\\scriptworm\\walmart-data-local\\productPriceDropAndRestock0.txt', '_read_True_', () =&amp;gt; {flagOfSay = 1})
+                   }
+    }
+  )
+  }, 1000* 10)
+  setInterval(async function () {
+
+
+      if(imagehref0 != '') {
+        let fileBox0 = FileBox.fromUrl(imagehref0)
+
+        //const contac = await bot.Contact.find({name: 'xxx'})
+         const contac = await bot.Room.find({ topic: 'your wanted room' })
+        // await new Promise(() =&amp;gt;
+        if (contac &amp;amp;&amp;amp; flagOfSay == 1) {
+
+          await contac.say(jslistofpd0)
+            .then(() =&amp;gt; setTimeout(function () { contac.say(jslistofpd1)}, 1000))
+            .then(() =&amp;gt; setTimeout(function () { contac.say(fileBox0)}, 2000))
+
+          flagOfSay = 0
+
+        }
+      }
+    }, 1000 * 10)
+}
+
+
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;这里不少的功能都可以在wechaty的官方文档有所解释，比如filebox(用于发送图片等复杂信息)，还有诸如contact.say()，room.say().
+对于typescript语言的异步功能可以参阅JavaScript的官方文档，大同小异，可以直接在ts文件里面写js的代码，只需要指定一些变量的属性。
+下面是完整的代码(出于隐私问题，令牌以及群名已被替换掉)&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-Typescript&quot;&gt;/**
+ * Wechaty - WeChat Bot SDK for Personal Account, Powered by TypeScript, Docker, and 💖
+ *  - https://github.com/chatie/wechaty
+ */
+import { FileBox } from 'file-box'
+import {
+  Contact,
+  Message,
+  ScanStatus,
+  Wechaty,
+  log,
+}               from 'wechaty'
+
+import { generate } from 'qrcode-terminal'
+import { PuppetPadplus } from 'wechaty-puppet-padplus'
+
+// You can safely ignore the next line because it is using for CodeSandbox
+require('./.code-sandbox.js')
+const fs = require('fs')
+
+const token = 'puppet_padplus_xxxxxx'
+const puppet = new PuppetPadplus({
+  token,
+})
+function onScan (qrcode: string, status: ScanStatus) {
+  if (status === ScanStatus.Waiting || status === ScanStatus.Timeout) {
+    generate(qrcode, { small: true })  // show qrcode on console
+
+    const qrcodeImageUrl = [
+      'https://wechaty.js.org/qrcode/',
+      encodeURIComponent(qrcode),
+    ].join('')
+
+    log.info('StarterBot', 'onScan: %s(%s) - %s', ScanStatus[status], status, qrcodeImageUrl)
+  } else {
+    log.info('StarterBot', 'onScan: %s(%s)', ScanStatus[status], status)
+  }
+}
+
+function onLogin (user: Contact) {
+  log.info('StarterBot', '%s login', user)
+  main()
+}
+
+function onLogout (user: Contact) {
+  log.info('StarterBot', '%s logout', user)
+}
+
+async function onMessage (msg: Message) {
+  log.info('StarterBot', msg.toString())
+
+  const contact = msg.from()
+  log.info('name', contact?.name())
+  // if (contact) { await contact.say('[自动回复]主人暂时不在，稍后看到再回复') }
+  if (msg.text() === 'ding') {
+    await msg.say('dong')
+  }
+}
+// const WECHATY_PUPPET_PADPLUS_TOKEN = 'puppet_padplus_285b71c97d022f21'
+const bot = new Wechaty({
+  name: 'ding-dong-bot',
+  /**
+   * Specify a `puppet` for a specific protocol (Web/Pad/Mac/Windows, etc).
+   *
+   * You can use the following providers:
+   *  - wechaty-puppet-hostie
+   *  - wechaty-puppet-puppeteer
+   *  - wechaty-puppet-padplus
+   *  - etc.
+   *
+   * Learn more about Wechaty Puppet Providers at:
+   *  https://github.com/wechaty/wechaty-puppet/wiki/Directory
+   */
+
+  puppet: puppet,
+
+})
+
+bot.on('scan',    onScan)
+bot.on('login',   onLogin)
+bot.on('logout',  onLogout)
+bot.on('message', onMessage)
+bot.start()
+  .then(() =&amp;gt; log.info('StarterBot', 'Starter Bot Started.'))
+  .catch(e =&amp;gt; log.error('StarterBot', e))
+async function main () {
+  let imagehref0 = ''
+  let jslistofpd0 = ''
+  let flagOfSay = 0
+  // let imagehref1 = ''
+  let jslistofpd1 = ''
+  // let imagehref2 = ''
+  // let jslistofpd2 = ''
+  // todo 改变文件路径位置，与沃尔玛的文件位置同源
+
+  setInterval( function () {
+    fs.readFile(
+      'D:\\scriptworm\\walmart-data-local\\productPriceDropAndRestock0.txt',
+      (err:any,data:any) =&amp;gt;
+    {
+      if (err) {
+              console.error(err)
+              return
+            }
+      console.log('[datatostring]', data.toString())
+      // imagehref0  = jslistofpd0.substring(jslistofpd0.search(/imagehref/) + 10, jslistofpd0.search(/FFFFFF/) + 6)
+      // jslistofpd0 = jslistofpd0.substring(jslistofpd0.search(/name/), jslistofpd0.search(/onlyapi/) + 7)
+      let str1 = data.toString()
+      let a1 = str1.search(/_read_False_/)
+      console.log(a1)
+      let a2 = str1.search(/_read_True_/)
+      console.log(a2)
+      if (a1 == 0) {
+        // todo: contact.say(something)
+        console.log(str1)
+        jslistofpd0 = data.toString()
+        console.log(jslistofpd0)
+        imagehref0  = jslistofpd0.substring(jslistofpd0.search(/imagehref/) + 10, jslistofpd0.search(/FFFFFF/) + 6)
+
+        jslistofpd1 = jslistofpd0.substring(jslistofpd0.search(/购物链接/) + 5, jslistofpd0.search(/%3Faffp1%3D/))
+        jslistofpd0 = jslistofpd0.substring(jslistofpd0.search(/商品名称/) + 5, jslistofpd0.search(/购物链接/))
+        fs.writeFile('D:\\scriptworm\\walmart-data-local\\productPriceDropAndRestock0.txt', '_read_True_', () =&amp;gt; {flagOfSay = 1})
+                   }
+    }
+  )
+  }, 1000* 10)
+  setInterval(async function () {
+
+
+      if(imagehref0 != '') {
+        let fileBox0 = FileBox.fromUrl(imagehref0)
+
+        //const contac = await bot.Contact.find({name: 'xxx'})
+         const contac = await bot.Room.find({ topic: 'xxx' })
+        // await new Promise(() =&amp;gt;
+        if (contac &amp;amp;&amp;amp; flagOfSay == 1) {
+
+          await contac.say(jslistofpd0)
+            .then(() =&amp;gt; setTimeout(function () { contac.say(jslistofpd1)}, 1000))
+            .then(() =&amp;gt; setTimeout(function () { contac.say(fileBox0)}, 2000))
+
+          flagOfSay = 0
+
+        }
+      }
+    }, 1000 * 10)
+}
+
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;用npm命令运行后扫码登录&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;npm start
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;重新运行后，扫码登录之后后台就打印出已确认的日志：&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;=================================================&lt;/span&gt;
+    QRCODE_SCAN MSG : 已扫码，请在手机端确认登陆...
+&lt;span class=&quot;o&quot;&gt;=================================================&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;=================================================&lt;/span&gt;
+            QRCODE_SCAN MSG : 已确认
+&lt;span class=&quot;o&quot;&gt;=================================================&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;接下来就能在指定的群聊中，实时的发送得到的数据了。&lt;/p&gt;</content><author><name>zcr20090430</name></author><category term="project" /><category term="wechaty" /><category term="wechaty-puppet-padplus" /><category term="python" /><category term="typescript" /><summary type="html">基于Wechaty打造实时爬取产品信息并分享给用户群</summary></entry><entry><title type="html">Microsoft MVP Blog: Six Lines Of Code. Two MVPs. One Chatbot.</title><link href="https://wechaty.js.org/2020/11/10/six-lines-code-two-ai-mvps-one-chatbot/" rel="alternate" type="text/html" title="Microsoft MVP Blog: Six Lines Of Code. Two MVPs. One Chatbot." /><published>2020-11-10T00:00:00+00:00</published><updated>2020-11-10T00:00:00+00:00</updated><id>https://wechaty.js.org/2020/11/10/six-lines-code-two-ai-mvps-one-chatbot</id><content type="html" xml:base="https://wechaty.js.org/2020/11/10/six-lines-code-two-ai-mvps-one-chatbot/">&lt;p&gt;&lt;strong&gt;Six lines of code. Two MVPs. One chatbot.&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;This is the proposition behind WeChaty, a conversational SDK which enables for bot development with just six lines of JavaScript, Python, Go, and Java, and cross-platform support including Linux, Windows, MacOS, and Docker.&lt;/p&gt;
+
+&lt;p&gt;Created by AI MVPs &lt;a href=&quot;https://mvp.microsoft.com/en-us/mvp/jiarui%20li-5003226&quot;&gt;Jiarui Li&lt;/a&gt; and &lt;a href=&quot;https://mvp.microsoft.com/en-us/mvp/Huan%20%E2%80%86%20LI-5003061&quot;&gt;Huan Li&lt;/a&gt;, the open-source repository on GitHub has enabled more than 10,000 developers from countries around the world to make AI chatbots and connect to each other.&lt;/p&gt;
+
+&lt;p&gt;“We found that although the chatbot has become one of the hot spots of the internet and something which has been integrating and affecting everyone’s lives, for most developers it remained really difficult to build a chatbot,” the Chinese duo says.&lt;/p&gt;
+
+&lt;p&gt;“Now, thanks to Microsoft AI techniques like BotFramework and Cognitive Service, developers can build a chatbot quickly without any mathematical and algorithmic skills. With WeChaty, developers can use basic software and engineering skills to build an intelligent chatbot at a very low cost.”&lt;/p&gt;
+
+&lt;p&gt;For developers, WeChaty helps raise working efficiency and save time in three ways.&lt;/p&gt;
+
+&lt;p&gt;First, developers save the time of creating a basic framework, which usually takes three to six months. Second, the open-source ecosystem enables developers to leverage the work of others in their solutions. Third, WeChaty supports dozens of instant messaging platforms, so one chatbot can be migrated seamlessly between WeChat, WeChat Work, Gitter, WhatsApp, DingDing, Telegram, and others.&lt;/p&gt;
+
+&lt;p&gt;Launching in 2016, the duo has since built Microsoft AI plugins for WeChaty and given several tech talks at Microsoft Summit. Moreover, the duo has published a book, titled “Chatbot Zero to One: Practice Guide to Conversational Interaction Design,” in order to share their experience of building a chatbot using Microsoft technology.&lt;/p&gt;
+
+&lt;p&gt;During its history, WeChaty has been updated 24 times, attracted about 10,000 developers, and received more than 100 contributors.&lt;/p&gt;
+
+&lt;p&gt;“We built WeChaty to provide the community with a good communication platform,” the duo says. “They are passionate to test, find problems, and submit the quantity of pull requests to help WeChaty repair and grow in return. Certainly, we could say that without these fantastic contributors and community, we could not have today’s high-quality WeChaty!”&lt;/p&gt;
+
+&lt;p&gt;WeChaty actively supports this community with hundreds of technical blogs and videos, docs, and case studies available on the &lt;a href=&quot;https://wechaty.js.org&quot;&gt;official website&lt;/a&gt;. Further, the team organizes &lt;a href=&quot;https://www.bot5.club&quot;&gt;Bot Friday&lt;/a&gt;, a weekly club for chatbot builders and chatbot entrepreneurs which discusses and explores technical problems.&lt;/p&gt;
+
+&lt;p&gt;“As Microsoft MVPs, we are always excited to hear “Thank you for sharing. Your project helps us to understand how AI-related projects can make a positive difference in the world’,” the duo says.&lt;/p&gt;
+
+&lt;p&gt;“In the future, we have a great vision to upgrade WeChaty from a Conversational SDK to SaaS, which will offer a more convenient and efficient service to everyone.”&lt;/p&gt;
+
+&lt;p&gt;For more on WeChaty, check out their &lt;a href=&quot;https://github.com/wechaty/wechaty&quot;&gt;Github&lt;/a&gt;.&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;Source: &lt;a href=&quot;https://techcommunity.microsoft.com/t5/microsoft-mvp-award-program-blog/six-lines-of-code-two-mvps-one-chatbot/ba-p/1861785&quot;&gt;Microsoft MVP Award Program Blog&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;</content><author><name>lijiarui</name></author><category term="story" /><category term="news" /><category term="wechaty" /><category term="mvp" /><category term="microsoft" /><summary type="html">Six lines of code. Two MVPs. One chatbot.</summary><media:thumbnail xmlns:media="http://search.yahoo.com/mrss/" url="https://wechaty.js.org/assets/2020/11-mvp-six-two-one/wechaty-contributors.webp" /><media:content medium="image" url="https://wechaty.js.org/assets/2020/11-mvp-six-two-one/wechaty-contributors.webp" xmlns:media="http://search.yahoo.com/mrss/" /></entry><entry><title type="html">Chatie status page has been published!</title><link href="https://wechaty.js.org/2020/11/06/chatie-status-page-published/" rel="alternate" type="text/html" title="Chatie status page has been published!" /><published>2020-11-06T00:00:00+00:00</published><updated>2020-11-06T00:00:00+00:00</updated><id>https://wechaty.js.org/2020/11/06/chatie-status-page-published</id><content type="html" xml:base="https://wechaty.js.org/2020/11/06/chatie-status-page-published/">&lt;p&gt;Today, we have published a cloud service status page at &lt;a href=&quot;https://chatie.statuspage.io&quot;&gt;https://chatie.statuspage.io&lt;/a&gt; , please feel free to have a look at it. It’s currently under construction and we will publish our service status over there in the future. Thanks for your attention, have a nice day!&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://chatie.statuspage.io&quot;&gt;&lt;img src=&quot;/assets/2020/11-chatie-status-page/chatie-status.png&quot; alt=&quot;Chatie status page&quot; /&gt;&lt;/a&gt;&lt;/p&gt;</content><author><name>huan</name></author><category term="announcement" /><category term="news" /><category term="chatie" /><summary type="html">Today, we have published a cloud service status page at https://chatie.statuspage.io , please feel free to have a look at it. It’s currently under construction and we will publish our service status over there in the future. Thanks for your attention, have a nice day!</summary><media:thumbnail xmlns:media="http://search.yahoo.com/mrss/" url="https://wechaty.js.org/assets/2020/11-chatie-status-page/hostie-concurrency.png" /><media:content medium="image" url="https://wechaty.js.org/assets/2020/11-chatie-status-page/hostie-concurrency.png" xmlns:media="http://search.yahoo.com/mrss/" /></entry><entry><title type="html">Official-Account Puppet Released</title><link href="https://wechaty.js.org/2020/11/06/wechaty-puppet-oa-released-en/" rel="alternate" type="text/html" title="Official-Account Puppet Released" /><published>2020-11-06T00:00:00+00:00</published><updated>2020-11-06T00:00:00+00:00</updated><id>https://wechaty.js.org/2020/11/06/wechaty-puppet-oa-released-en</id><content type="html" xml:base="https://wechaty.js.org/2020/11/06/wechaty-puppet-oa-released-en/">&lt;p&gt;Developing a customized WeChat official account is a complex process, which requires reading a lot of documents. Especially, developing a robot with a custom reply function based on WeChat official account, and wechaty is good at solving such problems, so we have this puppet.&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Wechaty-pure-official-account&lt;/code&gt; does not encapsulate all the functions in WeChat public account, but extract the custom customer service dialogue module and encapsulate it as the underlying puppet. In this way, we can use wechaty to develop the customer service dialogue management based on Wechaty easily.&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;Wechaty lets you focus on the processing of dialogue logic&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;If you have developed other IM platforms using wechaty, you can develop the WeChat official account platform without changing the logic code, which has a very high platform migration capability.&lt;/p&gt;
+
+&lt;h2 id=&quot;introduction&quot;&gt;Introduction&lt;/h2&gt;
+
+&lt;p&gt;Using wechaty to develop different platform chatbot is almost no difference at the code level, the underlying &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;puppet&lt;/code&gt; has encapsulated all the logic, ‘wechaty’ provides a unified upper interface, so you only need to know how to use wechaty, you can develop powerful multi-platform chatbot.&lt;/p&gt;
+
+&lt;p&gt;The development of WeChat Official Account is compared with other platforms, the only difference is that you need to provide WeChat Official Account configuration information, such as’ appId ‘, ‘appSecret’, ‘token’ and so on.&lt;/p&gt;
+
+&lt;h2 id=&quot;quick-start&quot;&gt;Quick Start&lt;/h2&gt;
+
+&lt;p&gt;Using wechaty to develop a dialogue chatbot on any platform can be roughly divided into three steps&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Initialize dialogue platform puppet&lt;/li&gt;
+  &lt;li&gt;Configure puppet to wechaty&lt;/li&gt;
+  &lt;li&gt;Using wechaty upper interface to develop chatbot&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;In the first step, because the different details of the underlying packages are different, initialization operations are different, such as WeChat official account platform, which requires &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;appId&lt;/code&gt;, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;appSecret&lt;/code&gt; and other information separately.&lt;/p&gt;
+
+&lt;p&gt;In the second step, when initializing the wechaty instance, it is necessary to configure the puppet as a parameter, so that when wechaty performs dialog operation, it actually calls the underlying logic of the puppet.&lt;/p&gt;
+
+&lt;p&gt;In the third step, we use the upper layer interface of wechaty to develop the chatbot. The operation mode is the same for all platforms, so the developer’s attention will be focused on this. The above two steps only need simple configuration.&lt;/p&gt;
+
+&lt;p&gt;There are some details about the development of WeChat official account using wechaty. I will show you how to quickly get the official account chatbot with a few code.&lt;/p&gt;
+
+&lt;h3 id=&quot;1-configure-internet-address&quot;&gt;1. Configure Internet address&lt;/h3&gt;
+
+&lt;p&gt;The official account of WeChat requires the address of the service provider to be external network address, supporting HTTP and HTTPS, and the ports supported respectively are: 80, 443. Therefore, it is very important to have an external IP address in the development phase. Here, we recommend several intranet penetration tools:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;1.1 &lt;a href=&quot;https://localtunnel.github.io/www/&quot;&gt;localtunel&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Temporary Internet address can be created, which will be invalid after a certain period of time, but this is in line with the requirements of &lt;strong&gt;development stage&lt;/strong&gt;. The steps are also very simple:&lt;/p&gt;
+
+&lt;p&gt;```shell script
+npm install -g localtunnel
+lt –port 80&lt;/p&gt;
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;
+- 1.2 [ngrok](https://www.npmjs.com/package/ngrok)
+
+It can create permanent external network addresses, free address numbers and limited bandwidth, but this is enough for WeChat's official account development with very small dialogue. The use of the tutorial is also very simple, I will not describe the specific here, the detailed content can be viewed on the official website.
+
+### 2. Initialization of WeChat official account chatbot
+
+Using wechaty to develop corresponding platform's chatbot, we need to use the corresponding platform puppet, and the WeChat official account corresponds to puppet: `wechaty-puppet-official-account`. The installation tutorial is as follows:
+
+```shell script
+npm install wechaty-puppet-official-account
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Next is initialization, and WeChat official account requires configuration information such as &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;appId&lt;/code&gt;, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;appSecret&lt;/code&gt;, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;token&lt;/code&gt;, etc. the sample code is as follows:&lt;/p&gt;
+
+&lt;div class=&quot;language-typescript highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;PuppetOA&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;dl&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;wechaty-puppet-official-account&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;'&lt;/span&gt;
+
+&lt;span class=&quot;kd&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;puppet&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;PuppetOA&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;({&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;appId&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;dl&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;wxbd801c28fbe1bbbd&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;appSecret&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;dl&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;6959408a3ba1c82db1a11d941df65764&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;token&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;dl&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;token&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;port&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;8080&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;})&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Next, you need to configure it to wechaty. The example code is as follows:&lt;/p&gt;
+
+&lt;div class=&quot;language-typescript highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kd&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;bot&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Wechaty&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;({&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;puppet&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;puppet&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;})&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;In this regard, the initialization of wechaty has been completed, isn’t it very simple? So the next step is to develop the dialogue logic code of wechaty core.&lt;/p&gt;
+
+&lt;h3 id=&quot;3-chatbot-core-logic&quot;&gt;3. Chatbot Core Logic&lt;/h3&gt;
+
+&lt;p&gt;In this part, I only show you the simple message reply function, which is enough to show developers how to develop customized chat robots.&lt;/p&gt;
+
+&lt;p&gt;To learn more about the development of wechaty chatbot, you need to go to &lt;a href=&quot;http://wechaty.js.org/docs/introduction/&quot;&gt;official website&lt;/a&gt; Check the documentation. The following is the overall sample code:&lt;/p&gt;
+
+&lt;div class=&quot;language-typescript highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;Contact&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;Message&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;Wechaty&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;log&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;dl&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;wechaty&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;'&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;MessageType&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;dl&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;wechaty-puppet&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;'&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;async&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;onMessage&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;msg&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Message&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;log&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;info&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;StarterBot&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;msg&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;toString&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;())&lt;/span&gt;
+
+  &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;msg&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;text&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;===&lt;/span&gt; &lt;span class=&quot;dl&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;ding&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;await&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;msg&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;say&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;`Welcome to wechaty Official Account\n refer to  ： http://www.wechaty.js.org 😄😄😄`&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;msg&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;type&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;MessageType&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Image&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;kd&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;fileBox&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;await&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;msg&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;toFileBox&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+    &lt;span class=&quot;c1&quot;&gt;// send message to talker&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;await&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;msg&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;say&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;fileBox&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;c1&quot;&gt;// I am a repeater ~_~~&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;await&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;msg&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;say&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;msg&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;text&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;())&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;kd&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;bot&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Wechaty&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;({&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;dl&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;ding-dong-bot&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;puppet&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;PuppetOA&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;({&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;appId&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;dl&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;wxbd801c28fbe1bbbd&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;appSecret&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;dl&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;6959408a3ba1c82db1a11d941df65764&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;token&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;dl&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;token&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;port&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;80&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;})&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;})&lt;/span&gt;
+
+&lt;span class=&quot;nx&quot;&gt;bot&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;on&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;message&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;onMessage&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;start&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;then&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;log&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;info&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;StarterBot&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;dl&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;Starter Bot Started.&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;catch&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;e&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;log&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;error&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;StarterBot&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;e&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
+
+&lt;p&gt;Using wechaty to develop WeChat official account chatbot is very simple. It is very friendly to new developer. If you want to see the detailed usage, you can go to &lt;a href=&quot;https://github.com/wechaty/wechaty-puppet-official-account&quot;&gt;github&lt;/a&gt; Check the latest documents, and you are welcome to mention issues and PR.&lt;/p&gt;
+
+&lt;p&gt;未来，我们也将逐步接入钉钉、飞书等平台，最新动态内容请看&lt;a href=&quot;http://wechaty.js.org/&quot;&gt;wechaty.js.org&lt;/a&gt;，感谢大家的关注。&lt;/p&gt;</content><author><name>wj-mcat</name></author><category term="project" /><category term="news" /><category term="wechaty" /><category term="wechaty-puppet-official-account" /><summary type="html">Developing a customized WeChat official account is a complex process, which requires reading a lot of documents. Especially, developing a robot with a custom reply function based on WeChat official account, and wechaty is good at solving such problems, so we have this puppet.</summary><media:thumbnail xmlns:media="http://search.yahoo.com/mrss/" url="https://wechaty.js.org/assets/2020/official-account/wechaty-puppet-official-account.png" /><media:content medium="image" url="https://wechaty.js.org/assets/2020/official-account/wechaty-puppet-official-account.png" xmlns:media="http://search.yahoo.com/mrss/" /></entry><entry><title type="html">node-wechaty let’s water</title><link href="https://wechaty.js.org/2020/11/03/lets-water-bot/" rel="alternate" type="text/html" title="node-wechaty let’s water" /><published>2020-11-03T00:00:00+00:00</published><updated>2020-11-03T00:00:00+00:00</updated><id>https://wechaty.js.org/2020/11/03/lets-water-bot</id><content type="html" xml:base="https://wechaty.js.org/2020/11/03/lets-water-bot/">&lt;h2 id=&quot;lets-water-wechaty-bot&quot;&gt;let’s water wechaty-bot&lt;水群机器人&gt;&lt;/水群机器人&gt;&lt;/h2&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://github.com/chatie/wechaty&quot;&gt;&lt;img src=&quot;https://img.shields.io/badge/Powered%20By-Wechaty-green.svg&quot; alt=&quot;Powered by Wechaty&quot; /&gt;&lt;/a&gt;
+&lt;a href=&quot;https://github.com/juzibot/Welcome/wiki/Everything-about-Wechaty&quot;&gt;&lt;img src=&quot;https://img.shields.io/badge/Wechaty-开源激励计划-green.svg&quot; alt=&quot;Wechaty开源激励计划&quot; /&gt;&lt;/a&gt;&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;背景：微信机器人，用于管理水群 提醒水友们（程序员）到点喝水 &amp;amp;&amp;amp; 提醒我自己一些时间点，比如4点半抢券&lt;/p&gt;
+
+  &lt;p&gt;实现：使用&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;nodejs&lt;/code&gt;作为后端，&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;node-schedule&lt;/code&gt;作为定时任务模块支持，&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;qrcode-terminal&lt;/code&gt;生成登录二维码&lt;/p&gt;
+
+  &lt;p&gt;后期：目前有一个管理系统， 希望向机器人发送指定格式的信息，由机器人完成后台管理的一些操作，减少人工操作的步骤&lt;/p&gt;
+
+  &lt;p&gt;自动化部署：使用docker + daocloud平台 + github，一键+持续集成&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h2 id=&quot;安装依赖--启动&quot;&gt;安装依赖 &amp;amp;&amp;amp; 启动&lt;/h2&gt;
+
+&lt;div class=&quot;language-shell highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;
+&lt;span class=&quot;nb&quot;&gt;cd &lt;/span&gt;app/
+npm i
+npm start
+
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;</content><author><name>wanglei158</name></author><category term="app" /><category term="room" /><category term="wechaty" /><category term="let's waterx" /><category term="drink" /><category term="node-wechaty" /><summary type="html">let’s water wechaty-bot</summary><media:thumbnail xmlns:media="http://search.yahoo.com/mrss/" url="https://wechaty.js.org/assets/2020/11-lets-water/letswater.png" /><media:content medium="image" url="https://wechaty.js.org/assets/2020/11-lets-water/letswater.png" xmlns:media="http://search.yahoo.com/mrss/" /></entry></feed>

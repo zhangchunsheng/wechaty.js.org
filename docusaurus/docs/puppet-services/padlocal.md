@@ -9,7 +9,7 @@ sidebar_label: PadLocal
 
 ## How to buy(apply)
 
-[Submit an issue at here](https://github.com/wechaty/puppet-services/issues/new?assignees=padlocal&labels=padlocal&template=padlocal.md&title=PadLocal%3A+)
+Please follow [TOKEN 申请方法](https://github.com/padlocal/wechaty-puppet-padlocal/wiki/TOKEN-%E7%94%B3%E8%AF%B7%E6%96%B9%E6%B3%95), or [submit an issue at here](https://github.com/wechaty/puppet-services/issues/new?assignees=padlocal&labels=padlocal&template=padlocal.md&title=PadLocal%3A+)
 
 ## History
 
@@ -17,3 +17,7 @@ sidebar_label: PadLocal
 1. Testing Progress
 1. Beta Announcement
 1. Release Announcement
+
+## Contact
+
+- Wechat: oxddoxdd

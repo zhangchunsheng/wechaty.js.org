@@ -2,7 +2,7 @@ const path = require('path')
 
 module.exports = {
   title: 'Wechaty',
-  tagline: 'Conversational SDK for Chatbot Makers',
+  tagline: 'RPA SDK for Chatbot Makers',
   url: 'https://wechaty.js.org',
   baseUrl: '/',
   onBrokenLinks: 'throw',
@@ -32,20 +32,17 @@ module.exports = {
       items: [
         { label: 'News',            href: 'https://wechaty.js.org/news/',         position: 'right', target: '_self' },
         { label: 'Blog',            href: 'https://wechaty.js.org/blog/',         position: 'right', target: '_self' },
-        { label: 'Developers',      href: 'https://wechaty.js.org/developers/',   position: 'right' },
+        { label: 'Contributors',    href: 'https://wechaty.js.org/contributors/', position: 'right' },
 
         { label: 'Docs',            to: 'docs/', position: 'right', activeBasePath: 'docs',
           items: [
-            { label: 'Introduction',      to: 'docs/introduction/' },
-            { label: 'Getting Started',   to: 'docs/getting-started/' },
-            { label: 'Tutorial',          to: 'docs/tutorials/' },
-            { label: 'Recipe',            to: 'docs/recipes/' },
-            { label: 'Case Study',        to: 'docs/case-study/' },
-            { label: 'Puppet Service',    to: 'docs/puppet-services/' },
-            { label: 'Developer Program', to: 'docs/developer-program/' },
-            { label: 'API',               to: 'docs/api/' },
-            { label: 'FAQ',               to: 'docs/faq/' },
-            { label: 'Troubleshooting',   to: 'docs/troubleshooting' },
+            { label: 'Introduction',        to: 'docs/introduction/' },
+            { label: 'Getting Started',     to: 'docs/getting-started/' },
+            { label: 'Case Study',          to: 'docs/case-study/' },
+            { label: 'Puppet Service',      to: 'docs/puppet-services/' },
+            { label: 'Contributor Program', to: 'docs/contributor-program/' },
+            { label: 'API',                 to: 'docs/api/' },
+            { label: 'FAQ',                 to: 'docs/faq/' },
           ],
         },
 

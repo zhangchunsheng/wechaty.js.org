@@ -1,42 +1,4 @@
-const CHATBOT_1_TO_2 = {
-  type: 'category',
-  label: 'Chatbot 1 to 2',
-  items: [
-    'chatbot-1-to-2/README',
-    {
-      type: 'category',
-      label: '基础篇',
-      items: [
-        'chatbot-1-to-2/basic/typescript',
-        'chatbot-1-to-2/basic/basic-wechaty',
-        'chatbot-1-to-2/basic/seven-lines-code-chatbot',
-        'chatbot-1-to-2/basic/ding-dong-bot',
-      ],
-    },
-    {
-      type: 'category',
-      label: '应用篇',
-      items: [
-        'chatbot-1-to-2/applications/1.words-per-day',
-        'chatbot-1-to-2/applications/2.contact-and-room-management',
-        'chatbot-1-to-2/applications/3.group-chatbot',
-        'chatbot-1-to-2/applications/4.group-qa-chatbot',
-      ],
-    },
-    {
-      type: 'category',
-      label: '进阶篇',
-      items: [
-        'chatbot-1-to-2/advanced/1.multi-languages',
-        'chatbot-1-to-2/advanced/2.multi-platform',
-        'chatbot-1-to-2/advanced/3.multi-plugins',
-        'chatbot-1-to-2/advanced/4.deployment',
-        'chatbot-1-to-2/advanced/5.wechaty-with-ai',
-        'chatbot-1-to-2/advanced/6.story-of-open-source',
-      ],
-    },
-  ],
-}
+const CHATBOT_1_TO_2 = require('./sidebar-chatbot-1-to-2.js')
 
 module.exports = {
   docs: {
@@ -44,8 +6,10 @@ module.exports = {
       'introduction/README',
       'introduction/multi-language',
       'introduction/puppet',
-      'introduction/concepts',
       'introduction/motivations',
+      'introduction/concepts',
+      'introduction/architecture',
+      'introduction/lifecycle',
       'examples',
       'examples2',
       'introduction/alternatives',
@@ -79,11 +43,12 @@ module.exports = {
       'puppet-services/README',
       'puppet-services/wxwork',
       'puppet-services/padlocal',
+      'puppet-services/paimon',
       'puppet-services/donut',
     ],
-    'Developer Program': [
-      'developer-program/README',
-      'developer-program/publish-blog',
+    'Contributor Program': [
+      'contributor-program/README',
+      'contributor-program/publish-blog',
     ],
     'API Reference': [
       'api/README',
@@ -94,12 +59,14 @@ module.exports = {
       'api/room-invitation',
       'api/friendship',
     ],
-    FAQ: [
-      'faq/README',
-      'faq/general',
-      'faq/puppet',
-      'faq/miscellaneous',
+    Specifications: [
+      'specifications/README',
+      'specifications/wechaty',
+      'specifications/puppet',
+      'specifications/service',
+      'specifications/token',
     ],
+    FAQ: ['faq'],
     Troubleshooting: [
       'troubleshooting',
     ],

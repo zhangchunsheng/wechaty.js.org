@@ -1,6 +1,5 @@
 ---
-title: "基于开放 API 封装 Wechaty 接口下的飞书聊天机器人"
-date: 2020-08-19 22:00 +0800
+title: "基于开放 API 封装 Wechaty 接口下的飞书聊天机器人：期中"
 author: fanrui
 categories: project
 image: /assets/2020/lark-puppet/wechaty-lark-mid-term.png
@@ -70,6 +69,10 @@ tags:
 
 - 后续工作安排
 目前在项目细节上有一些疑惑，如获取到的文件如何存储/处理等，在完成本周的任务后将针对这些细节和导师进行沟通，整体时间安排不变。
+
+- 项目成果：
+  - 中期汇报 视频:{% include iframe.html src="https://youtu.be/u5bbdWLbpBY" %}
+  - Demo 视频:{% include iframe.html src="https://youtu.be/g7K8l734uuY" %}
 
 ## 联系我们
 
